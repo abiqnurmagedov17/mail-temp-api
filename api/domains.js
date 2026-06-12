@@ -16,6 +16,7 @@ module.exports = async (req, res) => {
       count: domains.length
     });
   } catch (error) {
+    console.error('API domains error:', error);
     res.status(500).json({
       success: false,
       error: error.message
