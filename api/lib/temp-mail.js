@@ -1,4 +1,4 @@
-const fetch = require('node-fetch');
+const axios = require('axios');
 
 const TEMP_MAIL_V3 = 'https://api.internal.temp-mail.io/api/v3';
 const TEMP_MAIL_V4 = 'https://api.internal.temp-mail.io/api/v4';
@@ -9,19 +9,19 @@ const HEADERS = {
   'Application-Version': '4.0.0',
   'X-CORS-Header': 'iaWg3pchvFx48fY',
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36',
-  'Referer': 'https://temp-mail.io/en'
+  'Referer': 'https://temp-mail.io/en',
+  'Accept': 'application/json'
 };
 
 // Get available domains
 async function getDomains() {
   try {
-    const response = await fetch(`${TEMP_MAIL_V4}/domains`, {
-      method: 'GET',
+    const response = await axios.get(`${TEMP_MAIL_V4}/domains`, {
       headers: HEADERS,
-      compress: true
+      timeout: 10000
     });
 
-    const data = await response.json();
+    const data = response.data;
     let domains = [];
 
     if (Array.isArray(data)) {
@@ -34,13 +34,18 @@ async function getDomains() {
 
     // Extract string domains
     domains = domains
-      .map(d => typeof d === 'string' ? d : (d.domain || d.name || ''))
+      .map(d => typeof d === 'string' ? d : (d?.domain || d?.name || ''))
       .filter(d => d && d.includes('.'));
+
+    if (domains.length === 0) {
+      throw new Error('No domains found');
+    }
 
     return domains;
 
   } catch (error) {
-    // Fallback
+    console.error('❌ getDomains error:', error.message);
+    // Fallback domains
     return [
       'lnovic.com', 'bltiwd.com', 'gmeenramy.com',
       'cembt.mom', 'nimt.homes', 'kearnt.com',
@@ -56,19 +61,12 @@ async function createEmail(name, domain) {
   if (domain) body.domain = domain.toLowerCase().trim();
 
   try {
-    const response = await fetch(`${TEMP_MAIL_V3}/email/new`, {
-      method: 'POST',
+    const response = await axios.post(`${TEMP_MAIL_V3}/email/new`, body, {
       headers: HEADERS,
-      body: JSON.stringify(body),
-      compress: true
+      timeout: 15000
     });
 
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      throw new Error(err.message || `HTTP ${response.status}`);
-    }
-
-    const data = await response.json();
+    const data = response.data;
     
     return {
       success: true,
@@ -78,6 +76,8 @@ async function createEmail(name, domain) {
     };
 
   } catch (error) {
+    console.error('❌ createEmail error:', error.message);
+
     // Fallback: construct email manually
     if (name && domain) {
       return {
@@ -109,15 +109,12 @@ async function getMessages(email) {
   try {
     const encodedEmail = encodeURIComponent(email);
     
-    const response = await fetch(`${TEMP_MAIL_V3}/email/${encodedEmail}/messages`, {
-      method: 'GET',
+    const response = await axios.get(`${TEMP_MAIL_V3}/email/${encodedEmail}/messages`, {
       headers: HEADERS,
-      compress: true
+      timeout: 10000
     });
 
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-    const data = await response.json();
+    const data = response.data;
     
     let messages = [];
     if (Array.isArray(data)) {
@@ -136,6 +133,7 @@ async function getMessages(email) {
     };
 
   } catch (error) {
+    console.error('❌ getMessages error:', error.message);
     return {
       success: true,
       email,
@@ -150,14 +148,13 @@ async function deleteEmail(email) {
   try {
     const encodedEmail = encodeURIComponent(email);
     
-    await fetch(`${TEMP_MAIL_V3}/email/${encodedEmail}`, {
-      method: 'DELETE',
+    await axios.delete(`${TEMP_MAIL_V3}/email/${encodedEmail}`, {
       headers: HEADERS,
-      compress: true
+      timeout: 10000
     });
 
   } catch (error) {
-    // Silent fail
+    console.error('❌ deleteEmail error:', error.message);
   }
 
   return {
