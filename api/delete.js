@@ -8,7 +8,7 @@ module.exports = async (req, res) => {
   }
 
   if (req.method !== 'DELETE') {
-    return res.status(405).json({ error: 'Use DELETE method' });
+    return res.status(405).json({ success: false, error: 'Use DELETE method' });
   }
 
   const { email } = req.query;
@@ -24,6 +24,7 @@ module.exports = async (req, res) => {
     const result = await deleteEmail(email);
     res.status(200).json(result);
   } catch (error) {
+    console.error('API delete error:', error);
     res.status(500).json({
       success: false,
       error: error.message
