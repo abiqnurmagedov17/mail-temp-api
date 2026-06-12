@@ -9,7 +9,7 @@ module.exports = async (req, res) => {
   }
 
   if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Use GET method' });
+    return res.status(405).json({ success: false, error: 'Use GET method' });
   }
 
   const { email } = req.query;
@@ -25,6 +25,7 @@ module.exports = async (req, res) => {
     const result = await getMessages(email);
     res.status(200).json(result);
   } catch (error) {
+    console.error('API messages error:', error);
     res.status(500).json({
       success: false,
       error: error.message
