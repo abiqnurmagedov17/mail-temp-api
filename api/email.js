@@ -8,7 +8,7 @@ module.exports = async (req, res) => {
   }
 
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Use POST method' });
+    return res.status(405).json({ success: false, error: 'Use POST method' });
   }
 
   try {
@@ -16,6 +16,7 @@ module.exports = async (req, res) => {
     const result = await createEmail(name, domain);
     res.status(200).json(result);
   } catch (error) {
+    console.error('API email error:', error);
     res.status(500).json({
       success: false,
       error: error.message
