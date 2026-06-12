@@ -1,0 +1,16 @@
+{
+  "name": "temp-mail-api",
+  "version": "1.0.0",
+  "description": "Temp Mail API Proxy for Vercel",
+  "main": "api/index.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "node-fetch": "^2.7.0"
+  },
+  "engines": {
+    "node": ">=18.x"
+  }
+}
